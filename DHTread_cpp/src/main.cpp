@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <DHT.h>
+#include <math.h>
 
 // sets DHT pin and model!
 #define DHTPIN 8
