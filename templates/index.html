@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Arduino Sensor Dashboard</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="index,follow">
+    <meta name="generator" content="GrapesJS Studio">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=Space+Grotesk:wght@500;700&amp;display=swap" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  </head>
+  <body class="gjs-t-body font-body cls-k48kkr">
+    <div class="page-background">
+      <div class="background-layer"></div>
+      <div class="radial-one background-layer"></div>
+      <div class="radial-two background-layer"></div>
+      <div class="radial-three background-layer"></div>
+      <div class="grid-bg background-grid"></div>
+    </div>
+    <main id="ianh3" class="dashboard-main">
+        <span id="lastUpdated" style="display:none;"></span>
+      </header>
+      <section class="chart-section">
+        <article class="glass panel gjs-t-border chart-card chart-card-cyan">
+          <div class="chart-head">
+            <div class="chart-copy">
+              <span class="section-eyebrow">Live history view</span>
+              <h2 class="gjs-t-h2 font-display section-title chart-title">Temperature Trend</h2>
+              <p class="chart-text">A live line chart of recent room temperature readings, updated from the Arduino stream so short spikes, drift, and steadier comfort periods are easy to spot at a glance.</p>
+            </div>
+            <span class="chart-badge">
+              <span class="chart-badge-dot"></span>Thermal signal
+            </span>
+          </div>
+          <div class="chart-stage">
+            <canvas id="temperatureChart"></canvas>
+          </div>
+          <div class="chart-meta">
+            <span>Tracks the same live series used for the current KPI and summary stats.</span>
+            <span><strong>Goal:</strong> roughly 20–24°C indoors</span>
+          </div>
+        </article>
+        <article class="glass panel gjs-t-border chart-card chart-card-purple">
+          <div class="chart-head">
+            <div class="chart-copy">
+              <span class="section-eyebrow">Live history view</span>
+              <h2 class="gjs-t-h2 font-display section-title chart-title">Humidity Trend</h2>
+              <p class="chart-text">A rolling view of recent relative humidity readings, useful for seeing whether the room is staying balanced, drying out, or gradually becoming too humid over time.</p>
+            </div>
+            <span class="chart-badge chart-badge-purple">
+              <span class="chart-badge-dot"></span>Moisture signal
+            </span>
+          </div>
+          <div class="chart-stage">
+            <canvas id="humidityChart"></canvas>
+          </div>
+          <div class="chart-meta">
+            <span>Uses the same incoming sensor feed as the humidity KPI and min/max/average panel.</span>
+            <span><strong>Goal:</strong> roughly 40–60% RH</span>
+          </div>
+        </article>
+      </section>
+      <section id="ip00g" class="kpi-section">
+        <article id="ime0z" class="glass panel glow-cyan gjs-t-border kpi-card">
+          <div id="id8cy" class="kpi-header">
+            <div id="iimtm" class="kpi-text">
+              <span id="ipy0z" class="kpi-label">Current Temperature</span>
+              <span id="tempValue" class="font-display kpi-value">--</span>
+            </div>
+            <div id="ik59h" class="kpi-icon-wrap">
+              <img src="https://api.iconify.design/lucide-thermometer.svg?color=%23a5f3fc" alt="temperature" id="i2w38" class="kpi-icon" />
+            </div>
+          </div>
+          <div id="icevy" class="kpi-footer">
+            <span id="tempTrend" class="kpi-trend">--</span>
+            <span id="iq3tk" class="kpi-helper">Comfort target is roughly 20-24°C for a stable indoor room.</span>
+          </div>
+        </article>
+        <article id="i0nwa" class="glass panel glow-purple gjs-t-border kpi-card">
+          <div id="ifuxj" class="kpi-header">
+            <div id="io30i" class="kpi-text">
+              <span id="irefh" class="kpi-label">Current Humidity</span>
+              <span id="humidityValue" class="font-display kpi-value">--</span>
+            </div>
+            <div id="i4xgk" class="kpi-icon-wrap">
+              <img src="https://api.iconify.design/lucide-droplets.svg?color=%23ddd6fe" alt="humidity" id="i10yb" class="kpi-icon" />
+            </div>
+          </div>
+          <div id="i7t8t" class="kpi-footer">
+            <span id="humidityTrend" class="kpi-trend">--</span>
+            <span id="id0x1" class="kpi-helper">Comfort target is roughly 40-60% relative humidity indoors.</span>
+          </div>
+        </article>
+        <article id="if80yf" class="glass panel gjs-t-border kpi-card">
+          <div id="if6dmq" class="kpi-header">
+            <div id="iskp12" class="kpi-text">
+              <span id="ir67u1" class="kpi-label">Temperature Status</span>
+              <span id="tempStatus" class="font-display kpi-value">--</span>
+            </div>
+            <div id="ifuyvm" class="kpi-icon-wrap">
+              <img src="https://api.iconify.design/lucide-shield-check.svg?color=%2386efac" alt="status" id="iditdh" class="kpi-icon" />
+            </div>
+          </div>
+          <p id="ii5d37" class="kpi-description">Status is based on simple room thresholds so it reads cold, normal, hot, or very hot as values move.</p>
+        </article>
+        <article id="iuv42g" class="glass panel gjs-t-border kpi-card">
+          <div id="it89aq" class="kpi-header">
+            <div id="iybbt7" class="kpi-text">
+              <span id="ibzehw" class="kpi-label">Data Window</span>
+              <span id="ilkgdr" class="font-display kpi-value">-- reads</span>
+            </div>
+            <div id="ikmt47" class="kpi-icon-wrap">
+              <img src="https://api.iconify.design/lucide-chart-line.svg?color=%237dd3fc" alt="chart" id="ie5b33" class="kpi-icon" />
+            </div>
+          </div>
+          <p id="i54kjz" class="kpi-description">Reading live values from the current sensor history. Expected cadence is approximately one sample per second.</p>
+        </article>
+      </section>
+      <section id="ie2yzk" class="integration-section">
+        <div id="iavgsec" class="stats-grid">
+          <article id="itempstats" class="glass panel glow-cyan gjs-t-border stats-card stats-card-cyan">
+            <div id="itemphead" class="stats-card-header">
+              <div id="itemptitles" class="stats-card-title-wrap">
+                <span id="itempeye" class="section-eyebrow">Calculated from live readings</span>
+                <h2 id="itemptitle" class="gjs-t-h2 font-display section-title">Temperature Summary</h2>
+              </div>
+              <div id="itempicon" class="stats-card-icon">
+                <img src="https://api.iconify.design/lucide-thermometer.svg?color=%23a5f3fc" alt="temperature stats" id="itempiconimg" />
+              </div>
+            </div>
+            <div id="itempgrid" class="stats-card-grid">
+              <div id="itempminblock" class="stat-block">
+                <div id="itempminlabel" class="stat-label">Minimum</div>
+                <div id="tempMinValue" class="font-display stat-value">--</div>
+                <div id="itempminhelp" class="stat-helper">Lowest reading in current window</div>
+              </div>
+              <div id="itempmaxblock" class="stat-block">
+                <div id="itempmaxlabel" class="stat-label">Maximum</div>
+                <div id="tempMaxValue" class="font-display stat-value">--</div>
+                <div id="itempmaxhelp" class="stat-helper">Highest reading in current window</div>
+              </div>
+              <div id="itempavgblock" class="stat-block">
+                <div id="itempavglabel" class="stat-label">Average</div>
+                <div id="tempAvgValue" class="font-display stat-value">--</div>
+                <div id="itempavghelp" class="stat-helper">Mean value across all samples</div>
+              </div>
+            </div>
+            <div id="itempfoot" class="stats-footnote">Values update automatically from the same live temperature series powering the KPI and chart.</div>
+          </article>
+          <article id="ihumstats" class="glass panel glow-purple gjs-t-border stats-card stats-card-purple">
+            <div id="ihumhead" class="stats-card-header">
+              <div id="ihumtitles" class="stats-card-title-wrap">
+                <span id="ihumeye" class="section-eyebrow">Calculated from live readings</span>
+                <h2 id="ihumtitle" class="gjs-t-h2 font-display section-title">Humidity Summary</h2>
+              </div>
+              <div id="ihumicon" class="stats-card-icon">
+                <img src="https://api.iconify.design/lucide-droplets.svg?color=%23ddd6fe" alt="humidity stats" id="ihumiconimg" />
+              </div>
+            </div>
+            <div id="ihumgrid" class="stats-card-grid">
+              <div id="ihumminblock" class="stat-block">
+                <div id="ihumminlabel" class="stat-label">Minimum</div>
+                <div id="humidityMinValue" class="font-display stat-value">--</div>
+                <div id="ihumminhelp" class="stat-helper">Lowest reading in current window</div>
+              </div>
+              <div id="ihummaxblock" class="stat-block">
+                <div id="ihummaxlabel" class="stat-label">Maximum</div>
+                <div id="humidityMaxValue" class="font-display stat-value">--</div>
+                <div id="ihummaxhelp" class="stat-helper">Highest reading in current window</div>
+              </div>
+              <div id="ihumavgblock" class="stat-block">
+                <div id="ihumavglabel" class="stat-label">Average</div>
+                <div id="humidityAvgValue" class="font-display stat-value">--</div>
+                <div id="ihumavghelp" class="stat-helper">Mean value across all samples</div>
+              </div>
+            </div>
+            <div id="ihumfoot" class="stats-footnote">Values update automatically from the same live humidity series powering the KPI and chart.</div>
+          </article>
+        </div>
+      </section>
+    </main>
+    <script id="ihakqp">
+      const labels = ['--:--'];
+      const temperatureData = [0];
+      const humidityData = [0];
+
+      const gridColor = 'rgba(148,163,184,0.12)';
+      const tickColor = 'rgba(226,232,240,0.72)';
+
+      function makeGradient(ctx, area, colors) {
+        const gradient = ctx.createLinearGradient(0, area.top, 0, area.bottom);
+        gradient.addColorStop(0, colors[0]);
+        gradient.addColorStop(1, colors[1]);
+        return gradient;
+      }
+
+      const commonOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: {
+          duration: 300
+        },
+        interaction: {
+          intersect: false,
+          mode: 'index'
+        },
+        plugins: {
+          legend: {
+            display: false
+          },
+          tooltip: {
+            backgroundColor: 'rgba(15,23,42,0.96)',
+            titleColor: '#f8fafc',
+            bodyColor: '#cbd5e1',
+            borderColor: 'rgba(148,163,184,0.2)',
+            borderWidth: 1,
+            padding: 12,
+            displayColors: false
+          }
+        },
+        scales: {
+          x: {
+            grid: {
+              color: 'rgba(148,163,184,0.06)'
+            },
+            ticks: {
+              color: tickColor,
+              font: {
+                family: 'Inter',
+                size: 11
+              }
+            },
+            border: {
+              display: false
+            }
+          },
+          y: {
+            grid: {
+              color: gridColor
+            },
+            ticks: {
+              color: tickColor,
+              font: {
+                family: 'Inter',
+                size: 11
+              }
+            },
+            border: {
+              display: false
+            }
+          }
+        }
+      };
+
+      const tempCtx = document.getElementById('temperatureChart').getContext('2d');
+      const humidityCtx = document.getElementById('humidityChart').getContext('2d');
+
+      const tempChart = new Chart(tempCtx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Temperature',
+            data: temperatureData,
+            borderColor: '#22d3ee',
+            borderWidth: 3,
+            fill: true,
+            pointRadius: 0,
+            pointHoverRadius: 4,
+            tension: 0.38,
+            backgroundColor(context) {
+              const {
+                chart
+              } = context;
+              const {
+                ctx,
+                chartArea
+              } = chart;
+              if (!chartArea) return 'rgba(34,211,238,0.14)';
+              return makeGradient(ctx, chartArea, ['rgba(34,211,238,0.34)', 'rgba(34,211,238,0.02)']);
+            }
+          }]
+        },
+        options: {
+          ...commonOptions,
+          scales: {
+            ...commonOptions.scales,
+            y: {
+              ...commonOptions.scales.y,
+              suggestedMin: 18,
+              suggestedMax: 30,
+              ticks: {
+                color: tickColor,
+                callback: function(value) {
+                  return value + '°';
+                },
+                font: {
+                  family: 'Inter',
+                  size: 11
+                }
+              }
+            }
+          }
+        }
+      });
+
+      const humidChart = new Chart(humidityCtx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Humidity',
+            data: humidityData,
+            borderColor: '#8b5cf6',
+            borderWidth: 3,
+            fill: true,
+            pointRadius: 0,
+            pointHoverRadius: 4,
+            tension: 0.38,
+            backgroundColor(context) {
+              const {
+                chart
+              } = context;
+              const {
+                ctx,
+                chartArea
+              } = chart;
+              if (!chartArea) return 'rgba(139,92,246,0.14)';
+              return makeGradient(ctx, chartArea, ['rgba(139,92,246,0.34)', 'rgba(139,92,246,0.02)']);
+            }
+          }]
+        },
+        options: {
+          ...commonOptions,
+          scales: {
+            ...commonOptions.scales,
+            y: {
+              ...commonOptions.scales.y,
+              suggestedMin: 35,
+              suggestedMax: 65,
+              ticks: {
+                color: tickColor,
+                callback: function(value) {
+                  return value + '%';
+                },
+                font: {
+                  family: 'Inter',
+                  size: 11
+                }
+              }
+            }
+          }
+        }
+      });
+
+      function setTempStatus(temp) {
+        const tempStatus = document.getElementById('tempStatus');
+        tempStatus.className = 'font-display kpi-value';
+        if (!Number.isFinite(temp)) {
+          tempStatus.textContent = '--';
+          tempStatus.style.color = 'rgb(148 163 184)';
+          return;
+        }
+        if (temp >= 29) {
+          tempStatus.textContent = 'Very Hot';
+          tempStatus.style.color = '#fb7185';
+        } else if (temp >= 25) {
+          tempStatus.textContent = 'Hot';
+          tempStatus.style.color = '#fbbf24';
+        } else if (temp <= 16) {
+          tempStatus.textContent = 'Very Cold';
+          tempStatus.style.color = '#38bdf8';
+        } else if (temp <= 19) {
+          tempStatus.textContent = 'Cold';
+          tempStatus.style.color = '#7dd3fc';
+        } else {
+          tempStatus.textContent = 'Normal';
+          tempStatus.style.color = '#86efac';
+        }
+      }
+
+      function setComfortHelpers(currentTemp, currentHumidity) {
+        const tempHelper = document.getElementById('iq3tk');
+        const humidityHelper = document.getElementById('id0x1');
+        if (!Number.isFinite(currentTemp)) {
+          tempHelper.textContent = 'Comfort target is roughly 20-24°C for a stable indoor room.';
+        } else if (currentTemp < 20) {
+          tempHelper.textContent = 'Below the usual 20-24°C comfort range for a stable studio apartment.';
+        } else if (currentTemp > 24) {
+          tempHelper.textContent = 'Above the usual 20-24°C comfort range for a stable studio apartment.';
+        } else {
+          tempHelper.textContent = 'Within the usual 20-24°C comfort range for a stable indoor room.';
+        }
+        if (!Number.isFinite(currentHumidity)) {
+          humidityHelper.textContent = 'Comfort target is roughly 40-60% relative humidity indoors.';
+        } else if (currentHumidity < 40) {
+          humidityHelper.textContent = 'Below the usual 40-60% indoor comfort range; air may feel dry.';
+        } else if (currentHumidity > 60) {
+          humidityHelper.textContent = 'Above the usual 40-60% indoor comfort range; air may feel humid.';
+        } else {
+          humidityHelper.textContent = 'Within the usual 40-60% humidity range for indoor comfort.';
+        }
+      }
+
+      function formatLabel(value, index) {
+        if (typeof value === 'string' && value.trim()) return value.trim();
+        const now = new Date();
+        now.setSeconds(now.getSeconds() - ((Array.isArray(labels) ? labels.length : 0) - index - 1));
+        return now.toLocaleTimeString([], {
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit'
+        });
+      }
+
+      function updateTrend(elId, current, previous, suffix, decimals = 1) {
+        const el = document.getElementById(elId);
+        if (!Number.isFinite(current) || !Number.isFinite(previous)) {
+          el.textContent = '--';
+          return;
+        }
+        const delta = current - previous;
+        el.textContent = `${delta >= 0 ? '+' : ''}${delta.toFixed(decimals)}${suffix}`;
+      }
+
+      function getFiniteValues(values) {
+        return Array.isArray(values) ? values.filter(Number.isFinite) : [];
+      }
+
+      function getSeriesStats(values) {
+        const finite = getFiniteValues(values);
+        if (!finite.length) {
+          return {
+            min: NaN,
+            max: NaN,
+            avg: NaN
+          };
+        }
+        const min = Math.min(...finite);
+        const max = Math.max(...finite);
+        const sum = finite.reduce((acc, value) => acc + value, 0);
+        return {
+          min,
+          max,
+          avg: sum / finite.length
+        };
+      }
+
+      function formatStatValue(value, suffix, decimals) {
+        return Number.isFinite(value) ? `${value.toFixed(decimals)}${suffix}` : '--';
+      }
+
+      function updateSummaryCards(tempValues, humidityValues) {
+        const tempStats = getSeriesStats(tempValues);
+        const humidityStats = getSeriesStats(humidityValues);
+        document.getElementById('tempMinValue').textContent = formatStatValue(tempStats.min, '°', 1);
+        document.getElementById('tempMaxValue').textContent = formatStatValue(tempStats.max, '°', 1);
+        document.getElementById('tempAvgValue').textContent = formatStatValue(tempStats.avg, '°', 1);
+        document.getElementById('humidityMinValue').textContent = formatStatValue(humidityStats.min, '%', 0);
+        document.getElementById('humidityMaxValue').textContent = formatStatValue(humidityStats.max, '%', 0);
+        document.getElementById('humidityAvgValue').textContent = formatStatValue(humidityStats.avg, '%', 0);
+      }
+
+      function updateDataWindow(tempValues, humidityValues) {
+        const tempCount = getFiniteValues(tempValues).length;
+        const humidityCount = getFiniteValues(humidityValues).length;
+        const reads = Math.max(tempCount, humidityCount);
+        document.getElementById('ilkgdr').textContent = reads ? `${reads} reads` : '-- reads';
+        document.getElementById('i54kjz').textContent = reads ? `Currently showing ${reads} recent sensor ${reads === 1 ? 'read' : 'reads'}. Expected cadence is approximately one sample per second.` : 'Waiting for live sensor values. Expected cadence is approximately one sample per second.';
+      }
+
+      function updateKpis(currentTemp, currentHumidity, currentTime, previousTemp, previousHumidity, fetchedAt) {
+        document.getElementById('tempValue').textContent = Number.isFinite(currentTemp) ? currentTemp.toFixed(1) + '°' : '--';
+        document.getElementById('humidityValue').textContent = Number.isFinite(currentHumidity) ? Math.round(currentHumidity) + '%' : '--';
+        updateTrend('tempTrend', currentTemp, previousTemp, '°C', 1);
+        updateTrend('humidityTrend', currentHumidity, previousHumidity, '%', 0);
+        setTempStatus(currentTemp);
+        setComfortHelpers(currentTemp, currentHumidity);
+        const lastUpdated = document.getElementById('lastUpdated');
+        const hasCurrentTime = typeof currentTime === 'string' && currentTime.trim();
+        if (hasCurrentTime) {
+          lastUpdated.textContent = `Sensor: ${currentTime.trim()} · Sync: ${fetchedAt}`;
+        } else {
+          lastUpdated.textContent = `Synced ${fetchedAt}`;
+        }
+      }
+
+      function applyLiveData(payload, fetchedAt) {
+        const incomingTemps = Array.isArray(payload?.temperature) ? payload.temperature.map(Number) : [];
+        const incomingHumidity = Array.isArray(payload?.humidity) ? payload.humidity.map(Number) : [];
+        const incomingTimes = Array.isArray(payload?.time) ? payload.time : [];
+        const maxLen = Math.max(incomingTemps.length, incomingHumidity.length, incomingTimes.length);
+        if (!maxLen) {
+          updateKpis(NaN, NaN, '', NaN, NaN, fetchedAt);
+          updateSummaryCards([], []);
+          updateDataWindow([], []);
+          tempChart.data.labels = ['--:--'];
+          tempChart.data.datasets[0].data = [0];
+          humidChart.data.labels = ['--:--'];
+          humidChart.data.datasets[0].data = [0];
+          tempChart.update();
+          humidChart.update();
+          return;
+        }
+        const safeLabels = Array.from({
+          length: maxLen
+        }, (_, index) => formatLabel(incomingTimes[index], index));
+        const safeTemps = Array.from({
+          length: maxLen
+        }, (_, index) => {
+          const value = Number(incomingTemps[index]);
+          return Number.isFinite(value) ? value : null;
+        });
+        const safeHumidity = Array.from({
+          length: maxLen
+        }, (_, index) => {
+          const value = Number(incomingHumidity[index]);
+          return Number.isFinite(value) ? value : null;
+        });
+        tempChart.data.labels = safeLabels;
+        tempChart.data.datasets[0].data = safeTemps;
+        humidChart.data.labels = safeLabels;
+        humidChart.data.datasets[0].data = safeHumidity;
+        tempChart.update();
+        humidChart.update();
+        updateSummaryCards(safeTemps, safeHumidity);
+        updateDataWindow(safeTemps, safeHumidity);
+        const tempIndexes = safeTemps.map((v, i) => v !== null ? i : -1).filter(i => i >= 0);
+        const humidityIndexes = safeHumidity.map((v, i) => v !== null ? i : -1).filter(i => i >= 0);
+        const lastTempIndex = tempIndexes[tempIndexes.length - 1];
+        const prevTempIndex = tempIndexes[tempIndexes.length - 2];
+        const lastHumidityIndex = humidityIndexes[humidityIndexes.length - 1];
+        const prevHumidityIndex = humidityIndexes[humidityIndexes.length - 2];
+        const currentTemp = lastTempIndex >= 0 ? safeTemps[lastTempIndex] : NaN;
+        const previousTemp = prevTempIndex >= 0 ? safeTemps[prevTempIndex] : NaN;
+        const currentHumidity = lastHumidityIndex >= 0 ? safeHumidity[lastHumidityIndex] : NaN;
+        const previousHumidity = prevHumidityIndex >= 0 ? safeHumidity[prevHumidityIndex] : NaN;
+        const currentTime = safeLabels[safeLabels.length - 1] || '';
+        updateKpis(currentTemp, currentHumidity, currentTime, previousTemp, previousHumidity, fetchedAt);
+      }
+
+      let liveRequestInFlight = false;
+      async function fetchLiveData() {
+        if (liveRequestInFlight) return;
+        liveRequestInFlight = true;
+        const fetchedAt = new Date().toLocaleTimeString([], {
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit'
+        });
+        try {
+          const response = await fetch('/live', {
+            cache: 'no-store'
+          });
+          if (!response.ok) throw new Error('Live endpoint unavailable');
+          const payload = await response.json();
+          applyLiveData(payload, fetchedAt);
+        } catch (error) {
+          console.error('Arduino dashboard live fetch failed:', error);
+          document.getElementById('lastUpdated').textContent = `Sync failed at ${fetchedAt}`;
+        } finally {
+          liveRequestInFlight = false;
+        }
+      }
+
+      updateKpis(NaN, NaN, '', NaN, NaN, new Date().toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      }));
+      updateSummaryCards([], []);
+      updateDataWindow([], []);
+      fetchLiveData();
+      setInterval(fetchLiveData, 1000);
+    </script>
+  </body>
+</html>
