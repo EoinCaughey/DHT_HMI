@@ -2,7 +2,7 @@
 
 A real-time Human Machine Interface (HMI) dashboard for monitoring temperature and humidity data from a DHT11 module connected to Arduino Uno. The system streams serial data into a Python backend and visualizes it live in a modern web dashboard using Flask and Chart.js.
 
-![DHT_HMI](dashboard.png)
+![DHT_HMI](dashboard)
 ---
 
 ## Tech Stack
