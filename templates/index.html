@@ -1,7 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
+  <link rel="icon" type="image/svg+xml"
+      href="{{ url_for('static', filename='favicon.svg') }}">
   <head>
-    <title>Arduino Sensor Dashboard</title>
+    <title>DHT Dashboard</title>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="robots" content="index,follow">
@@ -21,6 +23,7 @@
       <div class="grid-bg background-grid"></div>
     </div>
     <main id="ianh3" class="dashboard-main">
+
         <span id="lastUpdated" style="display:none;"></span>
       </header>
       <section class="chart-section">
